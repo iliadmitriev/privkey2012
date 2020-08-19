@@ -81,5 +81,5 @@ RUN gcc -o privkey2012 -Iengine-${GOST_ENGINE_VERSION}  -I/usr/local/ssl/include
         engine-${GOST_ENGINE_VERSION}/gost_params.c engine-${GOST_ENGINE_VERSION}/e_gost_err.c \
         privkey2012.c -lcrypto -lssl -pthread -ldl -static -lgost
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["/usr/local/src/privkey2012"]
  
