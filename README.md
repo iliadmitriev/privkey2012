@@ -13,9 +13,9 @@ primary2.key
 
 ## Dependencies
 
-alpine 3.8
-openssl 1.1.1a https://github.com/openssl/openssl
-gost 1.1.0.3 https://github.com/gost-engine/engine
+1. alpine 3.8
+2. openssl 1.1.1a https://github.com/openssl/openssl
+3. gost 1.1.0.3 https://github.com/gost-engine/engine
 
 ## Building Image
 
