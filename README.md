@@ -14,8 +14,8 @@ primary2.key
 
 ## Dependencies
 
-1. alpine 3.8
-2. openssl 1.1.1a https://github.com/openssl/openssl
+1. alpine 3.12
+2. openssl 1.1.1i https://github.com/openssl/openssl
 3. gost 1.1.0.3 https://github.com/gost-engine/engine
 
 ## Building Image
@@ -26,7 +26,8 @@ To build image run:
 docker build -t privkey2012 ./
 ```
 
-## Using
+## How to use
+
 
 Change path ~/storage.001 to your storage path
 and run:
