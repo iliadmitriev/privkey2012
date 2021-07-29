@@ -1,6 +1,6 @@
 # Privkey2012
 
-This tool is used to extract private key from CryptoPRO storage format using GOST R 34.10-2012
+This tool is used to extract private key from CryptoPRO storage format using GOST R 34.10-2012 format
 
 Storage is a folder with files:
 ```
