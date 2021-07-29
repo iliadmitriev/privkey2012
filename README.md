@@ -14,11 +14,23 @@ primary.key
 primary2.key
 ```
 
-## Dependencies
+## Requirements and dependencies
 
-1. alpine 3.14
-2. openssl 1.1.1k https://github.com/openssl/openssl
-3. gost 1.1.1 https://github.com/gost-engine/engine
+CPU arhictecture:
+* x86_64 (amd64)
+* arm64 (aarch64)  
+
+OS:
+* Linux
+* MacOS
+
+Software:
+* [Docker version 20.10.7](https://www.docker.com)
+
+Based on:
+1. [alpine 3.14](https://alpinelinux.org)
+2. [openssl 1.1.1k](https://github.com/openssl/openssl)
+3. [gost engine 1.1.1](https://github.com/gost-engine/engine)
 
 ## Building Image
 
@@ -31,7 +43,7 @@ docker build -t privkey2012 ./
 ## How to use
 
 
-Change path ~/storage.001 to your storage path
+Change path `~/storage.001` to your storage path
 and run:
 ```
 docker run --rm -ti -v ~/storage.001:/usr/local/src/storage.001 privkey2012 storage.001
