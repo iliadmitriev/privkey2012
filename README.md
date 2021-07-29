@@ -1,5 +1,7 @@
 # Privkey2012
 
+[![Build docker and push](https://github.com/iliadmitriev/privkey2012/actions/workflows/docker-build-and-push.yml/badge.svg)](https://github.com/iliadmitriev/privkey2012/actions/workflows/docker-build-and-push.yml)
+
 This tool is used to extract private key from CryptoPRO storage format using GOST R 34.10-2012 format
 
 Storage is a folder with files:
@@ -14,9 +16,9 @@ primary2.key
 
 ## Dependencies
 
-1. alpine 3.12
-2. openssl 1.1.1i https://github.com/openssl/openssl
-3. gost 1.1.0.3 https://github.com/gost-engine/engine
+1. alpine 3.14
+2. openssl 1.1.1k https://github.com/openssl/openssl
+3. gost 1.1.1 https://github.com/gost-engine/engine
 
 ## Building Image
 
