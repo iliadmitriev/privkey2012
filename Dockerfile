@@ -31,10 +31,8 @@ RUN set -xe \
 
 # Build and install openssl
 RUN set -xe \
-    && cd /usr/local/src \
     && wget -q --show-progress --progress=bar:force "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz" -O \
         "openssl-${OPENSSL_VERSION}.tar.gz" \
-    && sha256sum "openssl-${OPENSSL_VERSION}.tar.gz" \
     && echo "$OPENSSL_SHA256" "openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c - \
     && tar -xzf "openssl-${OPENSSL_VERSION}.tar.gz" \
     && cd "openssl-${OPENSSL_VERSION}" \
@@ -65,6 +63,10 @@ RUN set -xe \
 
 # Build curl
 RUN set -xe \
+    && apk -q --update --no-cache add \
+        zlib-dev \
+        nghttp2-dev \
+        libidn2-dev \
     && wget -q --show-progress --progress=bar:force "https://github.com/curl/curl/releases/download/curl-$(printf ${CURL_VERSION} |tr -s . _)/curl-${CURL_VERSION}.tar.gz" -O \
         "curl-${CURL_VERSION}.tar.gz" \
     && echo "$CURL_SHA256" "curl-${CURL_VERSION}.tar.gz" | sha256sum -c - \
@@ -99,7 +101,11 @@ WORKDIR /usr/local/src
 RUN set -xe \
     && apk -q --no-cache upgrade && apk -q --update --no-cache add \
         bash \
+        libidn2 \
         coreutils \
+        nghttp2-libs \
+        ca-certificates \
+        ca-certificates-bundle \
     && rm -rf /var/cache/apk/*
 
 COPY --from=BUILDER /usr/local/ssl/ /usr/local/ssl/
@@ -130,4 +136,11 @@ RUN set -xe \
     && echo "default_algorithms = ALL" >> /usr/local/ssl/openssl.cnf \
     && echo "CRYPT_PARAMS = id-Gost28147-89-CryptoPro-A-ParamSet" >> /usr/local/ssl/openssl.cnf
 
+# Add Minsvyaz CA certificates
+RUN set -xe \
+    && curl -sSL https://github.com/schors/gost-russian-ca/raw/master/certs/ca-certificates.pem -o /usr/local/share/ca-certificates/gost-ca-certificates.pem \
+    && update-ca-certificates \
+    && rm -f /usr/local/share/ca-certificates/gost-ca-certificates.pem
+
 ENTRYPOINT ["./privkey2012"]
+
