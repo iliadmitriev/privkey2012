@@ -1,10 +1,12 @@
 name: Build docker and push
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  release:
+    types: [published]
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 
 jobs:
 
@@ -12,7 +14,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    if: "!contains(github.event.head_commit.message, '#nobuild')"
+#    if: "!contains(github.event.head_commit.message, '#nobuild')"
 
     steps:
     - name: Checkout repository
@@ -33,13 +35,22 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Make docker image tag
+      id: prepare
+      run: |
+        export VERSION=${GITHUB_REF#refs/tags/}
+        echo "${GITHUB_REF}"
+        echo "${VERSION}"
+        TAG="iliadmitriev/privkey2012:${VERSION}"
+        TAGS="${TAG},iliadmitriev/privkey2012:latest"
+        echo ::set-output name=tags::${TAGS}
     - name: Build and push
       uses: docker/build-push-action@v2
       with:
         context: .
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: iliadmitriev/privkey2012:latest
+        tags: ${{ steps.prepare.outputs.tags }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
     - name: Move cache
