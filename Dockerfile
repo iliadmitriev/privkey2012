@@ -35,9 +35,10 @@ RUN set -xe \
     && echo "$OPENSSL_SHA256" "openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c - \
     && tar -xzf "openssl-${OPENSSL_VERSION}.tar.gz" \
     && cd "openssl-${OPENSSL_VERSION}" \
-    && ./config no-async shared --prefix=/usr/local/ssl --openssldir=/usr/local/ssl -Wl,-rpath,/usr/local/ssl/lib \
+    && ./config no-async shared --prefix=/usr/local/ssl --openssldir=/usr/local/ssl -Wl,-rpath=/usr/local/ssl/lib -Wl,--enable-new-dtags \
     && make && make install_sw && make install_ssldirs \
-    && rm -rf "/usr/local/src/openssl-${OPENSSL_VERSION}.tar.gz"
+    && rm -rf "/usr/local/src/openssl-${OPENSSL_VERSION}.tar.gz" \
+    && /usr/local/ssl/bin/openssl version -a
 
 # Build and install GOST engine
 RUN set -xe \
@@ -52,8 +53,9 @@ RUN set -xe \
         -DCMAKE_C_FLAGS='-I/usr/local/ssl/include -L/usr/local/ssl/lib' \
 	    -DOPENSSL_ROOT_DIR=/usr/local/ssl \
         -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
-        -DOPENSSL_LIBRARIES=/usr/local/ssl/lib .. \
+        -DOPENSSL_LIBRARIES=/usr/local/ssl/lib \
         -DOPENSSL_ENGINES_DIR=$OPENSSL_ENGINES_DIR \
+        ../ \
     && cmake --build . --config Release \
     && make install 
     
