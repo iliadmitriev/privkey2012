@@ -35,7 +35,17 @@ RUN set -xe \
     && echo "$OPENSSL_SHA256" "openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c - \
     && tar -xzf "openssl-${OPENSSL_VERSION}.tar.gz" \
     && cd "openssl-${OPENSSL_VERSION}" \
-    && ./config no-async shared --prefix=/usr/local/ssl --openssldir=/usr/local/ssl -Wl,-rpath=/usr/local/ssl/lib -Wl,--enable-new-dtags \
+# RPATH crutch
+# in x86_64 target library path is "$PREFIX/lib64" in other cases "$PREFIX/lib"
+    && case $(uname -m) in \
+        "aarch64") \
+            export SSL_LIB=/usr/local/ssl/lib \
+            ;; \
+        "x86_64") \
+            export SSL_LIB=/usr/local/ssl/lib64 \
+            ;; \
+        esac \
+    && ./config no-async shared --prefix=/usr/local/ssl --openssldir=/usr/local/ssl -Wl,-rpath=${SSL_LIB} -Wl,--enable-new-dtags \
     && make && make install_sw && make install_ssldirs \
     && rm -rf "/usr/local/src/openssl-${OPENSSL_VERSION}.tar.gz" \
     && /usr/local/ssl/bin/openssl version -a
@@ -48,12 +58,22 @@ RUN set -xe \
     && mkdir build \
     && cd build \
     && OPENSSL_ENGINES_DIR=$(/usr/local/ssl/bin/openssl version -e | sed  's/.*\"\(.*\)\".*/\1/') \
+# RPATH crutch
+# in x86_64 target library path is "$PREFIX/lib64" in other cases "$PREFIX/lib"
+    && case $(uname -m) in \
+        "aarch64") \
+            export SSL_LIB=/usr/local/ssl/lib \
+            ;; \
+        "x86_64") \
+            export SSL_LIB=/usr/local/ssl/lib64 \
+            ;; \
+        esac \
     && cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_FLAGS='-I/usr/local/ssl/include -L/usr/local/ssl/lib' \
+        -DCMAKE_C_FLAGS="-I/usr/local/ssl/include -L${SSL_LIB}" \
 	    -DOPENSSL_ROOT_DIR=/usr/local/ssl \
         -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
-        -DOPENSSL_LIBRARIES=/usr/local/ssl/lib \
+        -DOPENSSL_LIBRARIES=${SSL_LIB} \
         -DOPENSSL_ENGINES_DIR=$OPENSSL_ENGINES_DIR \
         ../ \
     && cmake --build . --config Release \
@@ -70,7 +90,17 @@ RUN set -xe \
     && echo "$CURL_SHA256" "curl-${CURL_VERSION}.tar.gz" | sha256sum -c - \
     && tar -zxf "curl-${CURL_VERSION}.tar.gz" \
     && cd "curl-${CURL_VERSION}" \
-    && CPPFLAGS="-I/usr/local/ssl/include" LDFLAGS="-L/usr/local/ssl/lib -Wl,-rpath,/usr/local/ssl/lib" LD_LIBRARY_PATH=/usr/local/ssl/lib \
+# RPATH crutch
+# in x86_64 target library path is "$PREFIX/lib64" in other cases "$PREFIX/lib"
+    && case $(uname -m) in \
+        "aarch64") \
+            export SSL_LIB=/usr/local/ssl/lib \
+            ;; \
+        "x86_64") \
+            export SSL_LIB=/usr/local/ssl/lib64 \
+            ;; \
+        esac \
+    && CPPFLAGS="-I/usr/local/ssl/include" LDFLAGS="-L${SSL_LIB} -Wl,-rpath,${SSL_LIB}" LD_LIBRARY_PATH=${SSL_LIB} \
         ./configure --prefix=/usr/local/curl --with-ssl=/usr/local/ssl --with-libssl-prefix=/usr/local/ssl \
     && make \
     && make install \
@@ -80,10 +110,20 @@ RUN set -xe \
 COPY privkey2012.c /usr/local/src/privkey2012.c
 
 RUN set -xe \
+# RPATH crutch
+# in x86_64 target library path is "$PREFIX/lib64" in other cases "$PREFIX/lib"
+    && case $(uname -m) in \
+        "aarch64") \
+            export SSL_LIB=/usr/local/ssl/lib \
+            ;; \
+        "x86_64") \
+            export SSL_LIB=/usr/local/ssl/lib64 \
+            ;; \
+        esac \
     && gcc -o privkey2012 -Iengine  -I/usr/local/ssl/include \
         -L/usr/local/src/engine/build \
         -L/usr/local/src/openssl-${OPENSSL_VERSION} \
-        -L/usr/local/ssl/lib \
+        -L${SSL_LIB} \
 	engine/gost_ameth.c engine/gost_asn1.c \
 	engine/gost_params.c engine/e_gost_err.c \
         engine/gost_ctl.c \
@@ -117,6 +157,9 @@ RUN set -xe \
 
 # Enable GOST engine
 RUN set -xe \
+
+    && OPENSSL_ENGINES_DIR=$(/usr/local/ssl/bin/openssl version -e | sed  's/.*\"\(.*\)\".*/\1/') \
+
     && sed -i '6i openssl_conf=openssl_def' /usr/local/ssl/openssl.cnf \
     && echo "" >> /usr/local/ssl/openssl.cnf \
     && echo "# OpenSSL default section" >> /usr/local/ssl/openssl.cnf \
@@ -130,7 +173,7 @@ RUN set -xe \
     && echo "# Engine gost section" >> /usr/local/ssl/openssl.cnf \
     && echo "[gost_section]" >> /usr/local/ssl/openssl.cnf \
     && echo "engine_id = gost" >> /usr/local/ssl/openssl.cnf \
-    && echo "dynamic_path = /usr/local/ssl/lib/engines-1.1/gost.so" >> /usr/local/ssl/openssl.cnf \
+    && echo "dynamic_path = ${OPENSSL_ENGINES_DIR}/gost.so" >> /usr/local/ssl/openssl.cnf \
     && echo "default_algorithms = ALL" >> /usr/local/ssl/openssl.cnf \
     && echo "CRYPT_PARAMS = id-Gost28147-89-CryptoPro-A-ParamSet" >> /usr/local/ssl/openssl.cnf
 
