@@ -29,8 +29,8 @@ Software:
 
 Based on:
 1. [alpine 3.14](https://alpinelinux.org)
-2. [openssl 1.1.1k](https://github.com/openssl/openssl)
-3. [gost engine 1.1.1](https://github.com/gost-engine/engine)
+2. [openssl 3.0.0](https://github.com/openssl/openssl)
+3. [gost engine](https://github.com/iliadmitriev/engine)
 
 ## Building Image
 

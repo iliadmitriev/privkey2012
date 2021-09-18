@@ -4,12 +4,11 @@ ARG ALPINE_RELEASE="3.14"
 
 FROM alpine:${ALPINE_RELEASE} AS BUILDER
 
-ARG OPENSSL_VERSION=1.1.1k
-ARG OPENSSL_SHA256="892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5"
-ARG GOST_ENGINE_BRANCH=openssl_1_1_1
-ARG GOST_ENGINE_HEAD=9b492b334213ea6dfb76d746e93c4b69a4b36175
-ARG CURL_VERSION=7.78.0
-ARG CURL_SHA256="ed936c0b02c06d42cf84b39dd12bb14b62d77c7c4e875ade022280df5dcc81d7"
+ARG OPENSSL_VERSION=3.0.0
+ARG OPENSSL_SHA256="59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536"
+ARG GOST_ENGINE_HEAD=986905842330e4a54e61334eb508fe3147c43e38
+ARG CURL_VERSION=7.79.0
+ARG CURL_SHA256="aff0c7c4a526d7ecc429d2f96263a85fa73e709877054d593d8af3d136858074"
 
 WORKDIR /usr/local/src
 
@@ -42,25 +41,22 @@ RUN set -xe \
 
 # Build and install GOST engine
 RUN set -xe \
-    && git clone -q https://github.com/gost-engine/engine.git engine \
+    && git clone -q https://github.com/iliadmitriev/engine.git engine \
     && cd engine \
     && git checkout -q $GOST_ENGINE_HEAD \
-    && sed -i 's|printf("GOST engine already loaded\\n");|goto end;|' gost_eng.c \
     && mkdir build \
     && cd build \
+    && OPENSSL_ENGINES_DIR=$(/usr/local/ssl/bin/openssl version -e | sed  's/.*\"\(.*\)\".*/\1/') \
     && cmake \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_C_FLAGS='-I/usr/local/ssl/include -L/usr/local/ssl/lib' \
-	-DOPENSSL_ROOT_DIR=/usr/local/ssl \
+	    -DOPENSSL_ROOT_DIR=/usr/local/ssl \
         -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
         -DOPENSSL_LIBRARIES=/usr/local/ssl/lib .. \
-        -DOPENSSL_ENGINES_DIR=/usr/local/ssl/lib/engines-1.1 \
+        -DOPENSSL_ENGINES_DIR=$OPENSSL_ENGINES_DIR \
     && cmake --build . --config Release \
-    && cd bin \
-    && cp gostsum gost12sum /usr/local/bin \
-    && cd .. \
-    && cp bin/gost.so /usr/local/ssl/lib/engines-1.1
-
+    && make install 
+    
 # Build curl
 RUN set -xe \
     && apk -q --update --no-cache add \
